@@ -15,9 +15,9 @@ repositories {
 }
 
 tasks.withType(Checkstyle) {
-    ignoreFailures(true)
+    ignoreFailures = true
     reports {
-        html.enabled(true)
+        html.enabled = true
     }
 }
 
