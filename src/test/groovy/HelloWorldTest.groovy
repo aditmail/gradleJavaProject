@@ -27,7 +27,7 @@ class HelloWorldTest {
         def b = 2
         def calculator = new Calculator()
 
-        assert 40 == calculator.multiply(a, b)
+        assert 41 == calculator.multiply(a, b)
     }
 
     @Test
