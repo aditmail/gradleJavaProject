@@ -140,9 +140,9 @@ pipeline {
                     allowMissing         : false,
                     alwaysLinkToLastBuild: false,
                     keepAll              : true,
-                    reportDir            : 'build',
+                    reportDir            : '**/build/reports/tests/test/',
                     reportFiles          : 'index.html',
-                    reportName           : 'reports'
+                    reportName           : 'JUnit Reports'
 
             ]
         }
