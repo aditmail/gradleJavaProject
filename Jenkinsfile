@@ -113,14 +113,12 @@ pipeline {
     post {
         success {
             echo "Build are Successfull at ${dateTime()}"
-            mail(
-                    [
-                            body   : """Test Successfully Build at this:\n${buildURL}\n\nBuild Number\t\t: ${buildNumber}\nBuild Tag\t\t: ${buildTag}""",
-                            from   : "aditya@jenkins.com",
-                            subject: "Success in Build Jenkins:\n${jobName} #${buildNumber}",
-                            to     : "${emailAddress}"
-                    ]
-            )
+            mail([
+                    body   : """Test Successfully Build at this:\n${buildURL}\n\nBuild Number\t\t: ${buildNumber}\nBuild Tag\t\t: ${buildTag}""",
+                    from   : "aditya@jenkins.com",
+                    subject: "Success in Build Jenkins:\n${jobName} #${buildNumber}",
+                    to     : "${emailAddress}"
+            ])
             script {
                 if (params.JUnit) {
                     echo "Generating JUnit Reports"
@@ -131,13 +129,22 @@ pipeline {
                     echo "Generating Checkstyle Reports"
                     //checkstyle pattern: "**/build/reports/checkstyle/*.xml"
                     recordIssues(
-                            tools:
-                                    [
-                                            checkStyle(pattern: '**/build/reports/checkstyle/*.xml')
-                                    ]
+                            tools: [
+                                    checkStyle(pattern: '**/build/reports/checkstyle/*.xml')
+                            ]
                     )
                 }
             }
+
+            publishHTML target: [
+                    allowMissing         : false,
+                    alwaysLinkToLastBuild: false,
+                    keepAll              : true,
+                    reportDir            : 'build',
+                    reportFiles          : 'index.html',
+                    reportName           : 'reports'
+
+            ]
         }
 
         failure {
