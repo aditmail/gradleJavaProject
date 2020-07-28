@@ -143,9 +143,9 @@ pipeline {
                     allowMissing         : false,
                     alwaysLinkToLastBuild: false,
                     keepAll              : true,
-                    reportDir            : '/build/reports/tests/test/',
+                    reportDir            : "${jobName}/build/reports/tests/test/",
                     reportFiles          : 'index.html',
-                    reportName           : 'JUnit Reports'
+                    reportName           : 'JUnit-Reports'
 
             ]
         }
