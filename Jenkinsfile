@@ -111,8 +111,11 @@ pipeline {
     }
 
     post {
+        always {
+            echo "Builds are ${currentBuild.currentResult} at ${dateTime()}"
+        }
+
         success {
-            echo "Build are Successfull at ${dateTime()}"
             mail([
                     body   : """Test Successfully Build at this:\n${buildURL}\n\nBuild Number\t\t: ${buildNumber}\nBuild Tag\t\t: ${buildTag}""",
                     from   : "aditya@jenkins.com",
@@ -140,7 +143,7 @@ pipeline {
                     allowMissing         : false,
                     alwaysLinkToLastBuild: false,
                     keepAll              : true,
-                    reportDir            : '**/build/reports/tests/test/',
+                    reportDir            : '/build/reports/tests/test/',
                     reportFiles          : 'index.html',
                     reportName           : 'JUnit Reports'
 
@@ -148,7 +151,6 @@ pipeline {
         }
 
         failure {
-            echo "Failure are Occurs at ${dateTime()}"
             mail(
                     [
                             body   : """Test Failed Occurs\nCheck Console Output at below to see Detail\n${buildURL}\n\nBuild ID\t\t: ${buildID}\nBuild Number \t\t: ${buildNumber}\nBuild Tag\t\t: ${buildTag}""",
