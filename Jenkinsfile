@@ -3,14 +3,21 @@ def inputEmail() {
             message: 'Hey, you haven\'t set email before.. please set first',
             ok: 'Insert',
             parameters: [
-                    string(
-                            defaultValue: 'example@email.com',
+                    string(defaultValue: 'example@email.com',
                             description: '''<p style="color:red;">*Required</p><h5>Insert <b style="color:blue">Email Address</b> to Send Notification Email</h5>''',
                             name: 'inputEmailTo',
-                            trim: true
-                    )
+                            trim: true)
             ]
     )
+}
+
+def abortBuild(params) {
+    currentBuild.result = 'ABORTED'
+    error("Paramaters not Accepted for: ${params}")
+}
+
+def String dateTime() {
+    return new Date().format('dd/MM/yyyy HH:mm:ss')
 }
 
 pipeline {
@@ -36,7 +43,7 @@ pipeline {
     stages {
         stage('Initialize-Stage') {
             environment {
-                def timeStamp = new Date().format('dd/MM/yyyy HH:mm:ss')
+                def timeStamp = dateTime()
                 def emailAddress = null
             }
 
@@ -46,11 +53,16 @@ pipeline {
                 echo "Initialize Stage Running at ${timeStamp}"
 
                 script {
-                    if (emailto == "example@email.com") {
+                    if (emailto == null || emailto == "" || emailto == "example@email.com") {
                         echo "Seems Like you Haven\'t Set Email Yet, Requesting New Input.."
                         emailAddress = inputEmail()
                     } else {
                         emailAddress = emailto
+                    }
+
+                    //Checking again if email valid or not
+                    if (emailAddress == null || emailAddress == "" || emailAddress == "example@email.com") {
+                        abortBuild(emailAddress)
                     }
                 }
             }
@@ -58,7 +70,7 @@ pipeline {
 
         stage('Build-Stage') {
             environment {
-                def timeStamp = new Date().format('dd/MM/yyyy HH:mm:ss')
+                def timeStamp = dateTime()
             }
 
             steps {
@@ -75,7 +87,7 @@ pipeline {
 
         stage('Unit-Test Stage') {
             environment {
-                def timeStamp = new Date().format('dd/MM/yyyy HH:mm:ss')
+                def timeStamp = dateTime()
             }
 
             steps {
@@ -87,7 +99,7 @@ pipeline {
 
     post {
         success {
-            echo "Build are Successfull"
+            echo "Build are Successfull at ${dateTime()}"
             mail(
                     [
                             body   : """Test Successfully Build at this:\n${buildURL}\n\nBuild Number\t\t: ${buildNumber}\nBuild Tag\t\t: ${buildTag}""",
@@ -116,7 +128,7 @@ pipeline {
         }
 
         failure {
-            echo "Failure are Occurs"
+            echo "Failure are Occurs at ${dateTime()}"
             mail(
                     [
                             body   : """Test Failed Occurs\nCheck Console Output at below to see Detail\n${buildURL}\n\nBuild ID\t\t: ${buildID}\nBuild Number \t\t: ${buildNumber}\nBuild Tag\t\t: ${buildTag}""",
