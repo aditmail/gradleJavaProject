@@ -139,15 +139,14 @@ pipeline {
                 }
             }
 
-            publishHTML target: [
+            /*publishHTML target: [
                     allowMissing         : false,
                     alwaysLinkToLastBuild: false,
                     keepAll              : true,
-                    reportDir            : "${jobName}/build/reports/tests/test/",
+                    reportDir            : "coverage",
                     reportFiles          : 'index.html',
                     reportName           : 'JUnit-Reports'
-
-            ]
+            ]*/
         }
 
         failure {
