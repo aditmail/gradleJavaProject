@@ -1,3 +1,5 @@
+import java.util.regex.Pattern
+
 def inputEmail() {
     input(
             message: 'Hey, you haven\'t set email before.. please set first',
@@ -11,12 +13,18 @@ def inputEmail() {
     )
 }
 
+static def Boolean emailPatterns(email) {
+    def regex = "^[\\w!#\$%&'*+/=?`{|}~^-]+(?:\\.[\\w!#\$%&'*+/=?`{|}~^-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,6}\$"
+    Pattern pattern = Pattern.compile(regex)
+    return pattern.matcher(email).matches()
+}
+
 def abortBuild(params) {
     currentBuild.result = 'ABORTED'
     error("Paramaters not Accepted for: ${params}")
 }
 
-def String dateTime() {
+static def String dateTime() {
     return new Date().format('dd/MM/yyyy HH:mm:ss')
 }
 
@@ -57,11 +65,16 @@ pipeline {
                         echo "Seems Like you Haven\'t Set Email Yet, Requesting New Input.."
                         emailAddress = inputEmail()
                     } else {
-                        emailAddress = emailto
+                        if (emailPatterns(emailto)) {
+                            emailAddress = emailto
+                        } else {
+                            echo "Seems Like you Set Email Invalid Email, Requesting New Input.."
+                            emailAddress = inputEmail()
+                        }
                     }
 
                     //Checking again if email valid or not
-                    if (emailAddress == null || emailAddress == "" || emailAddress == "example@email.com") {
+                    if (emailAddress == null || emailAddress == "" || emailAddress == "example@email.com" || !emailPatterns(emailAddress)) {
                         abortBuild(emailAddress)
                     }
                 }
