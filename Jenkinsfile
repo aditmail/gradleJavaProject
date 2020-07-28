@@ -37,7 +37,7 @@ pipeline {
         stage('Initialize-Stage') {
             environment {
                 def timeStamp = new Date().format('dd/MM/yyyy HH:mm:ss')
-                def inputEmailTo = null
+                def emailAddress = null
             }
 
             steps {
@@ -48,11 +48,9 @@ pipeline {
                 script {
                     if (emailto == "example@email.com") {
                         echo "Seems Like you Haven\'t Set Email Yet, Requesting New Input.."
-                        inputEmailTo = inputEmail()
-                    }
-
-                    if (inputEmailTo != null) {
-                        emailto = inputEmailTo
+                        emailAddress = inputEmail()
+                    } else {
+                        emailAddress = emailto
                     }
                 }
             }
@@ -95,7 +93,7 @@ pipeline {
                             body   : """Test Successfully Build at this:\n${buildURL}\n\nBuild Number\t\t: ${buildNumber}\nBuild Tag\t\t: ${buildTag}""",
                             from   : "aditya@jenkins.com",
                             subject: "Success in Build Jenkins:\n${jobName} #${buildNumber}",
-                            to     : "${emailto}"
+                            to     : "${emailAddress}"
                     ]
             )
             script {
@@ -124,7 +122,7 @@ pipeline {
                             body   : """Test Failed Occurs\nCheck Console Output at below to see Detail\n${buildURL}\n\nBuild ID\t\t: ${buildID}\nBuild Number \t\t: ${buildNumber}\nBuild Tag\t\t: ${buildTag}""",
                             from   : "aditya@jenkins.com",
                             subject: "Failure in Build Jenkins: ${jobName} #${buildNumber}",
-                            to     : "${emailto}"
+                            to     : "${emailAddress}"
                     ]
             )
         }
