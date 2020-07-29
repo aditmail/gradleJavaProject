@@ -1,32 +1,4 @@
-import java.util.regex.Pattern
-
-def inputEmail() {
-    input(
-            message: 'Hey, you haven\'t set email before.. please set first',
-            ok: 'Insert',
-            parameters: [
-                    string(defaultValue: 'example@email.com',
-                            description: '''<p style="color:red;">*Required</p><h5>Insert <b style="color:blue">Email Address</b> to Send Notification Email</h5>''',
-                            name: 'inputEmailTo',
-                            trim: true)
-            ]
-    )
-}
-
-static def Boolean emailPatterns(email) {
-    def regex = "^[\\w!#\$%&'*+/=?`{|}~^-]+(?:\\.[\\w!#\$%&'*+/=?`{|}~^-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,6}\$"
-    Pattern pattern = Pattern.compile(regex)
-    return pattern.matcher(email).matches()
-}
-
-def abortBuild(params) {
-    currentBuild.result = 'ABORTED'
-    error("Paramaters not Accepted for: ${params}")
-}
-
-static def String dateTime() {
-    return new Date().format('dd/MM/yyyy HH:mm:ss')
-}
+def moduleScript = [:] //Global Variable for Define Groovy Scripts
 
 pipeline {
     agent any
@@ -47,32 +19,26 @@ pipeline {
         buildID = "${env.BUILD_ID}"
         buildTag = "${env.BUILD_TAG}"
 
-        SeparatedClass = load "pipeline/SeparatedPipeline.groovy"
+        //Define Variable for Utils Script Class
+        def utilsScript = "$moduleScript.utils"
     }
 
     stages {
         stage('Initialize-Stage') {
             environment {
-                def timeStamp = dateTime()
                 def emailAddress = null
             }
 
             steps {
                 script {
-                    def separatedClass = load("${env.WORKSPACE}/pipeline/SeparatedPipeline.groovy")
-                    print "Result : ${separatedClass.dateTime()}"
-                }
+                    utilsScript = load("${env.WORKSPACE}/src/main/groovy/pipeline/SeparatedPipeline.groovy")
+                    print "Initialize Stage Running at ${utilsScript.dateTime()}"
 
-                bat "java -version"
-                bat "gradle -v"
-                echo "Initialize Stage Running at ${timeStamp}"
-
-                script {
                     if (emailto == null || emailto == "" || emailto == "example@email.com") {
                         echo "Seems Like you Haven\'t Set Email Yet, Requesting New Input.."
-                        emailAddress = inputEmail()
+                        emailAddress = utilsScript.inputEmail()
                     } else {
-                        if (emailPatterns(emailto)) {
+                        if (utilsScript.emailPatterns(emailto)) {
                             emailAddress = emailto
                         } else {
                             echo "Seems Like you Set Email Invalid Email, Requesting New Input.."
@@ -81,20 +47,22 @@ pipeline {
                     }
 
                     //Checking again if email valid or not
-                    if (emailAddress == null || emailAddress == "" || emailAddress == "example@email.com" || !emailPatterns(emailAddress)) {
-                        abortBuild(emailAddress)
+                    if (emailAddress == null || emailAddress == "" || emailAddress == "example@email.com" || !utilsScript.emailPatterns(emailAddress)) {
+                        utilsScript.abortBuild(emailAddress)
                     }
                 }
+
+                bat "java -version"
+                bat "gradle -v"
             }
         }
 
         stage('Build-Stage') {
-            environment {
-                def timeStamp = dateTime()
-            }
-
             steps {
-                echo "Clone Repository from Github at ${timeStamp}"
+                script {
+                    echo "Clone Repository from Github at ${utilsScript.dateTime()}"
+                }
+
                 git(
                         [
                                 branch       : "master",
@@ -106,21 +74,19 @@ pipeline {
         }
 
         stage('Unit-Test Stage') {
-            environment {
-                def timeStamp = dateTime()
-            }
-
             steps {
-                echo "Unit Test Running at ${timeStamp}"
+                script {
+                    echo "Unit Test Running at ${utilsScript.dateTime()}"
+                }
                 bat "gradle clean build check test jar"
             }
         }
     }
 
     post {
-        always {
-            echo "Builds are ${currentBuild.currentResult} at ${dateTime()}"
-        }
+        /*always {
+            echo "Builds are ${currentBuild.currentResult} at ${moduleScript.separatedPipeline.dateTime()}"
+        }*/
 
         success {
             mail([
