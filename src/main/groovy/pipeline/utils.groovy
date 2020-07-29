@@ -11,7 +11,12 @@ static def String dateTime() {
 static def Boolean emailPatterns(email) {
     def regex = "^[\\w!#\$%&'*+/=?`{|}~^-]+(?:\\.[\\w!#\$%&'*+/=?`{|}~^-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,6}\$"
     Pattern pattern = Pattern.compile(regex)
+
     return pattern.matcher(email).matches()
+}
+
+static def Boolean validateEmail(emailAddress) {
+    return (emailAddress == null || emailAddress == "" || emailAddress == "example@email.com")
 }
 
 /**
@@ -35,9 +40,34 @@ def inputEmail() {
 /** Set Abort Build **/
 def abortBuild(params) {
     currentBuild.result = 'ABORTED'
-    error("Paramaters not Accepted for: ${params}")
+    error("Parameters not Accepted for: ${params}")
 }
 
+def sendEmail(Map params) {
+    if (params != null) {
+        def status = params['status']
+
+        def bodyMessage = ""
+        def subjectMessage = ""
+
+        if (status != null) {
+            if (status == 'Success') {
+                bodyMessage = "Test Successfully Build at this:\n"
+                subjectMessage = "Success in Build Jenkins:\n"
+            } else if (status == 'Failed') {
+                bodyMessage = "Test Failed Occurs\nCheck Console Output at below to see Detail\n"
+                subjectMessage = "Failure in Build Jenkins:\n"
+            }
+        }
+
+        mail([
+                body   : "${bodyMessage} ${params['buildURL']}\n\nBuild Number\t\t: ${params['buildNumber']}\nBuild Tag\t\t: ${params['buildTag']}",
+                from   : "aditya@jenkins.com",
+                subject: "${subjectMessage} ${params['jobName']} #${params['buildNumber']}",
+                to     : "${params['sendEmail']}"
+        ])
+    }
+}
+
+
 return this
-
-
