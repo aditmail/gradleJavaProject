@@ -24,6 +24,10 @@ def abortBuild(params) {
     error("Paramaters not Accepted for: ${params}")
 }
 
+static def String dateTime() {
+    return new Date().format('dd/MM/yyyy HH:mm:ss')
+}
+
 pipeline {
     agent any
     tools {
@@ -43,17 +47,19 @@ pipeline {
         buildID = "${env.BUILD_ID}"
         buildTag = "${env.BUILD_TAG}"
 
-        def separatedClass = load "pipeline/SeparatedPipeline.groovy"
+        SeparatedClass = load "pipeline/SeparatedPipeline.groovy"
     }
 
     stages {
         stage('Initialize-Stage') {
             environment {
-                def timeStamp = separatedClass.dateTime()
+                def timeStamp = dateTime()
                 def emailAddress = null
             }
 
             steps {
+                print "Result : ${SeparatedClass.dateTime()}"
+
                 bat "java -version"
                 bat "gradle -v"
                 echo "Initialize Stage Running at ${timeStamp}"
@@ -81,7 +87,7 @@ pipeline {
 
         stage('Build-Stage') {
             environment {
-                def timeStamp = separatedClass.dateTime()
+                def timeStamp = dateTime()
             }
 
             steps {
@@ -98,7 +104,7 @@ pipeline {
 
         stage('Unit-Test Stage') {
             environment {
-                def timeStamp = separatedClass.dateTime()
+                def timeStamp = dateTime()
             }
 
             steps {
@@ -110,7 +116,7 @@ pipeline {
 
     post {
         always {
-            echo "Builds are ${currentBuild.currentResult} at ${separatedClass.dateTime()}"
+            echo "Builds are ${currentBuild.currentResult} at ${dateTime()}"
         }
 
         success {
