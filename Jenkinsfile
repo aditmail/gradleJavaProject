@@ -21,15 +21,6 @@ pipeline {
 
         //Define Variable for Utils Script Class
         def utilsScript = "$moduleScript.utils"
-        def environmentMap = """${
-            [
-                    'jobName'    : jobName,
-                    'buildURL'   : buildURL,
-                    'buildNumber': buildNumber,
-                    'buildID'    : buildID,
-                    'buildTag'   : buildTag,
-            ]
-        }"""
     }
 
     stages {
@@ -42,7 +33,6 @@ pipeline {
                 script {
                     utilsScript = load("${env.WORKSPACE}/src/main/groovy/pipeline/utils.groovy")
                     echo "Initialize Stage Running at ${utilsScript.dateTime()}"
-                    print "map: $environmentMap"
 
                     if (utilsScript.validateEmail(emailto)) {
                         echo "Seems Like you Haven\'t Set Email Yet, Requesting New Input.."
@@ -59,8 +49,6 @@ pipeline {
                     //Checking again if email valid or not
                     if (utilsScript.validateEmail(emailAddress)) {
                         utilsScript.abortBuild(emailAddress)
-                    } else {
-                        environmentMap << ['sendEmail': emailAddress]
                     }
                 }
 
@@ -90,7 +78,6 @@ pipeline {
                 script {
                     echo "Unit Test Running at ${utilsScript.dateTime()}"
                 }
-
                 bat "gradle clean build check test jar"
             }
         }
@@ -104,10 +91,13 @@ pipeline {
         }*/
 
         success {
+            mail([
+                    body   : """Test Successfully Build at this:\n${buildURL}\n\nBuild Number\t\t: ${buildNumber}\nBuild Tag\t\t: ${buildTag}""",
+                    from   : "aditya@jenkins.com",
+                    subject: "Success in Build Jenkins:\n${jobName} #${buildNumber}",
+                    to     : "${emailAddress}"
+            ])
             script {
-                environmentMap << ['status': "Success"]
-                utilsScript.sendEmail(environmentMap)
-
                 if (params.JUnit) {
                     echo "Generating JUnit Reports"
                     junit testResults: "**/build/test-results/test/TEST-*.xml"
@@ -135,10 +125,14 @@ pipeline {
         }
 
         failure {
-            script {
-                environmentMap << ['status': "Failed"]
-                utilsScript.sendEmail(environmentMap)
-            }
+            mail(
+                    [
+                            body   : """Test Failed Occurs\nCheck Console Output at below to see Detail\n${buildURL}\n\nBuild ID\t\t: ${buildID}\nBuild Number \t\t: ${buildNumber}\nBuild Tag\t\t: ${buildTag}""",
+                            from   : "aditya@jenkins.com",
+                            subject: "Failure in Build Jenkins: ${jobName} #${buildNumber}",
+                            to     : "${emailAddress}"
+                    ]
+            )
         }
     }
 }
