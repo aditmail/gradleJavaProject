@@ -58,7 +58,10 @@ pipeline {
             }
 
             steps {
-                print "Result : ${SeparatedClass.dateTime()}"
+                script {
+                    def separatedClass = load("${env.WORKSPACE}/pipeline/SeparatedPipeline.groovy")
+                    print "Result : ${separatedClass.dateTime()}"
+                }
 
                 bat "java -version"
                 bat "gradle -v"
