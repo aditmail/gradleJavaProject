@@ -43,7 +43,7 @@ pipeline {
         buildID = "${env.BUILD_ID}"
         buildTag = "${env.BUILD_TAG}"
 
-        separatedClass = load "pipeline/SeparatedPipeline.groovy"
+        def separatedClass = load "pipeline/SeparatedPipeline.groovy"
     }
 
     stages {
